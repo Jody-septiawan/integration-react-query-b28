@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
-import { useHistory } from "react-router";
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button } from 'react-bootstrap';
+import { useHistory } from 'react-router';
 
-import NavbarAdmin from "../components/NavbarAdmin";
+import NavbarAdmin from '../components/NavbarAdmin';
 
 // Import useMutation and useQuery from react-query here ...
+import { useMutation, useQuery } from 'react-query';
 
 // Get API config here ...
+import { API } from '../config/api';
 
 export default function AddProductAdmin() {
-  const title = "Product admin";
-  document.title = "DumbMerch | " + title;
+  const title = 'Product admin';
+  document.title = 'DumbMerch | ' + title;
 
   let history = useHistory();
   let api = API();
@@ -19,10 +21,17 @@ export default function AddProductAdmin() {
   const [preview, setPreview] = useState(null); //For image preview
 
   // Create variabel for store data with useState here ...
+  const [form, setForm] = useState({
+    image: '',
+    name: '',
+    desc: '',
+    price: '',
+    qty: '',
+  });
 
   // Fetching category data
-  let { data: categories, refetch } = useQuery("categoriesCache", async () => {
-    const response = await api.get("/categories");
+  let { data: categories, refetch } = useQuery('categoriesCache', async () => {
+    const response = await api.get('/categories');
     return response.data;
   });
 
@@ -47,17 +56,44 @@ export default function AddProductAdmin() {
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.type === "file" ? e.target.files : e.target.value,
+      [e.target.name]:
+        e.target.type === 'file' ? e.target.files : e.target.value,
     });
 
     // Create image url for preview
-    if (e.target.type === "file") {
+    if (e.target.type === 'file') {
       let url = URL.createObjectURL(e.target.files[0]);
       setPreview(url);
     }
   };
 
   // Create function for handle insert product data with useMutation here ...
+  const handleSubmit = useMutation(async (e) => {
+    try {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.set('image', form?.image[0], form?.image[0].name);
+      formData.set('name', form.name);
+      formData.set('desc', form.desc);
+      formData.set('price', form.price);
+      formData.set('qty', form.qty);
+
+      const config = {
+        method: 'POST',
+        headers: {
+          Authorization: 'Basic ' + localStorage.token,
+        },
+        body: formData,
+      };
+
+      await api.post('/product', config);
+
+      history.push('/product-admin');
+    } catch (err) {
+      console.log(err);
+    }
+  });
 
   return (
     <>
@@ -74,15 +110,21 @@ export default function AddProductAdmin() {
                   <img
                     src={preview}
                     style={{
-                      maxWidth: "150px",
-                      maxHeight: "150px",
-                      objectFit: "cover",
+                      maxWidth: '150px',
+                      maxHeight: '150px',
+                      objectFit: 'cover',
                     }}
                     alt="preview"
                   />
                 </div>
               )}
-              <input type="file" id="upload" name="image" hidden onChange={handleChange} />
+              <input
+                type="file"
+                id="upload"
+                name="image"
+                hidden
+                onChange={handleChange}
+              />
               <label for="upload" className="label-file-add-product">
                 Upload file
               </label>
@@ -98,7 +140,7 @@ export default function AddProductAdmin() {
                 name="desc"
                 onChange={handleChange}
                 className="input-edit-category mt-4"
-                style={{ height: "130px" }}
+                style={{ height: '130px' }}
               ></textarea>
               <input
                 type="number"
@@ -115,12 +157,20 @@ export default function AddProductAdmin() {
                 className="input-edit-category mt-4"
               />
               <div className="card-form-input mt-4 px-2 py-1 pb-2">
-                <div className="text-secondary mb-1" style={{ fontSize: "15px" }}>
+                <div
+                  className="text-secondary mb-1"
+                  style={{ fontSize: '15px' }}
+                >
                   Category
                 </div>
                 {categories?.map((item, index) => (
                   <label key={index} className="checkbox-inline me-4">
-                    <input type="checkbox" value={item.id} onClick={handleChangeCategoryId} /> {item.name}
+                    <input
+                      type="checkbox"
+                      value={item.id}
+                      onClick={handleChangeCategoryId}
+                    />{' '}
+                    {item.name}
                   </label>
                 ))}
               </div>
