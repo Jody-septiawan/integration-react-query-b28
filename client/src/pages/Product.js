@@ -1,26 +1,46 @@
-import { useContext, useState, useEffect } from "react";
-import { useHistory } from "react-router-dom";
-import Masonry from "react-masonry-css";
-import { Container, Row, Col } from "react-bootstrap";
+import { useContext, useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import Masonry from 'react-masonry-css';
+import { Container, Row, Col } from 'react-bootstrap';
 
-import { UserContext } from "../context/userContext";
+import { UserContext } from '../context/userContext';
 
-import Navbar from "../components/Navbar";
-import ProductCard from "../components/card/ProductCard";
+import Navbar from '../components/Navbar';
+import ProductCard from '../components/card/ProductCard';
 
-import imgEmpty from "../assets/empty.svg";
+import imgEmpty from '../assets/empty.svg';
 
 // Import useQuery here ...
+import { useQuery } from 'react-query';
+
+// useMutation = Post, patch, put, delete
+// useQuery = Fetching
 
 // Get API config here ...
+import { API } from '../config/api';
 
 export default function Product() {
   let api = API();
 
-  const title = "Shop";
-  document.title = "DumbMerch | " + title;
+  const title = 'Shop';
+  document.title = 'DumbMerch | ' + title;
 
   // Create process for fetching products data from database with useQuery here ...
+  let {
+    data: products,
+    isLoading,
+    refetch,
+  } = useQuery('productsCache', async () => {
+    const config = {
+      method: 'GET',
+      headers: {
+        Authorization: 'Basic ' + localStorage.token,
+      },
+    };
+
+    const response = await api.get('/products', config);
+    return response.data;
+  });
 
   const breakpointColumnsObj = {
     default: 6,
@@ -52,7 +72,12 @@ export default function Product() {
           ) : (
             <Col>
               <div className="text-center pt-5">
-                <img src={imgEmpty} className="img-fluid" style={{ width: "40%" }} alt="empty" />
+                <img
+                  src={imgEmpty}
+                  className="img-fluid"
+                  style={{ width: '40%' }}
+                  alt="empty"
+                />
                 <div className="mt-3">No data product</div>
               </div>
             </Col>
